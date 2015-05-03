@@ -1,7 +1,9 @@
 package com.mikepenz.materialdrawer.model;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,12 +17,13 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Identifyable;
 import com.mikepenz.materialdrawer.model.interfaces.Tagable;
+import com.mikepenz.materialdrawer.model.interfaces.Typefaceable;
 import com.mikepenz.materialdrawer.util.UIUtils;
 
 /**
  * Created by mikepenz on 03.02.15.
  */
-public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSettingDrawerItem>, Tagable<ProfileSettingDrawerItem>, Identifyable<ProfileSettingDrawerItem> {
+public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSettingDrawerItem>, Tagable<ProfileSettingDrawerItem>, Identifyable<ProfileSettingDrawerItem>, Typefaceable<ProfileSettingDrawerItem> {
 
     private int identifier = -1;
 
@@ -28,6 +31,7 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
 
     private Drawable icon;
     private IIcon iicon;
+    private Uri iconUri;
 
     private String name;
     private String email;
@@ -44,6 +48,8 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
     private int iconColor = 0;
     private int iconColorRes = -1;
 
+    private Typeface typeface = null;
+
     public ProfileSettingDrawerItem withIdentifier(int identifier) {
         this.identifier = identifier;
         return this;
@@ -56,6 +62,18 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
 
     public ProfileSettingDrawerItem withIcon(IIcon iicon) {
         this.iicon = iicon;
+        return this;
+    }
+
+    @Override
+    public ProfileSettingDrawerItem withIcon(String url) {
+        this.iconUri = Uri.parse(url);
+        return this;
+    }
+
+    @Override
+    public ProfileSettingDrawerItem withIcon(Uri uri) {
+        this.iconUri = uri;
         return this;
     }
 
@@ -81,6 +99,11 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
     }
 
     public ProfileSettingDrawerItem setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        return this;
+    }
+
+    public ProfileSettingDrawerItem withEnabled(boolean enabled) {
         this.enabled = enabled;
         return this;
     }
@@ -118,6 +141,11 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
     @Override
     public ProfileSettingDrawerItem withSelectable(boolean selectable) {
         this.selectable = selectable;
+        return this;
+    }
+
+    public ProfileSettingDrawerItem withTypeface(Typeface typeface) {
+        this.typeface = typeface;
         return this;
     }
 
@@ -195,6 +223,19 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
         this.iicon = iicon;
     }
 
+    public void setIcon(Uri uri) {
+        this.iconUri = uri;
+    }
+
+    public void setIcon(String url) {
+        this.iconUri = Uri.parse(url);
+    }
+
+    @Override
+    public Uri getIconUri() {
+        return iconUri;
+    }
+
     @Override
     public boolean isSelectable() {
         return selectable;
@@ -204,6 +245,16 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
     public ProfileSettingDrawerItem setSelectable(boolean selectable) {
         this.selectable = selectable;
         return this;
+    }
+
+    @Override
+    public Typeface getTypeface() {
+        return typeface;
+    }
+
+    @Override
+    public void setTypeface(Typeface typeface) {
+        this.typeface = typeface;
     }
 
     @Override
@@ -248,7 +299,7 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
 
     @Override
     public String getType() {
-        return "PROFILE_SETTING2_ITEM";
+        return "PROFILE_SETTING_ITEM";
     }
 
     @Override
@@ -286,6 +337,10 @@ public class ProfileSettingDrawerItem implements IDrawerItem, IProfile<ProfileSe
             color = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_text, R.color.material_drawer_primary_text);
         }
         viewHolder.name.setTextColor(color);
+
+        if (getTypeface() != null) {
+            viewHolder.name.setTypeface(getTypeface());
+        }
 
         int icon_color = iconColor;
         if (icon_color == 0 && iconColorRes != -1) {

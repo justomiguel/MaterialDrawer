@@ -10,13 +10,46 @@ import android.widget.TextView;
 
 import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.materialdrawer.R;
+import com.mikepenz.materialdrawer.model.interfaces.Badgeable;
+import com.mikepenz.materialdrawer.model.interfaces.ColorfulBadgeable;
 import com.mikepenz.materialdrawer.util.PressedEffectStateListDrawable;
 import com.mikepenz.materialdrawer.util.UIUtils;
 
 /**
  * Created by mikepenz on 03.02.15.
  */
-public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> {
+public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> implements ColorfulBadgeable<SecondaryDrawerItem> {
+
+    private String badge;
+    private int badgeTextColor = 0;
+
+    public SecondaryDrawerItem withBadge(String badge) {
+        this.badge = badge;
+        return this;
+    }
+
+    public String getBadge() {
+        return badge;
+    }
+
+    @Override
+    public void setBadge(String badge) {
+        this.badge = badge;
+    }
+
+    @Override
+    public SecondaryDrawerItem withBadgeTextColor(int color) {
+        this.badgeTextColor = color;
+        return this;
+    }
+
+    @Override
+    public int getBadgeTextColor() {
+        return badgeTextColor;
+    }
+
+    @Override
+    public void setBadgeTextColor(int color) { this.badgeTextColor = color; }
 
     @Override
     public String getType() {
@@ -27,7 +60,6 @@ public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> {
     public int getLayoutRes() {
         return R.layout.material_drawer_item_secondary;
     }
-
 
     @Override
     public View convertView(LayoutInflater inflater, View convertView, ViewGroup parent) {
@@ -76,7 +108,7 @@ public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> {
             if (color == 0 && getTextColorRes() != -1) {
                 color = ctx.getResources().getColor(getTextColorRes());
             } else if (color == 0) {
-                color = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_text, R.color.material_drawer_primary_text);
+                color = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_secondary_text, R.color.material_drawer_secondary_text);
             }
         } else {
             color = getDisabledTextColor();
@@ -100,7 +132,7 @@ public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> {
             if (iconColor == 0 && getIconColorRes() != -1) {
                 iconColor = ctx.getResources().getColor(getIconColorRes());
             } else if (iconColor == 0) {
-                iconColor = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_text, R.color.material_drawer_primary_text);
+                iconColor = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_icon, R.color.material_drawer_primary_icon);
             }
         } else {
             iconColor = getDisabledIconColor();
@@ -112,7 +144,14 @@ public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> {
         }
 
         viewHolder.name.setTextColor(UIUtils.getTextColor(color, selected_text));
-        viewHolder.badge.setTextColor(UIUtils.getTextColor(color, selected_text));
+        if (badgeTextColor != 0) {
+            viewHolder.badge.setTextColor(badgeTextColor);
+        } else viewHolder.badge.setTextColor(UIUtils.getTextColor(color, selected_text));
+
+        if (getTypeface() != null) {
+            viewHolder.name.setTypeface(getTypeface());
+            viewHolder.badge.setTypeface(getTypeface());
+        }
 
         Drawable icon = null;
         Drawable selectedIcon = null;
@@ -128,10 +167,10 @@ public class SecondaryDrawerItem extends BaseDrawerItem<SecondaryDrawerItem> {
             icon = new IconicsDrawable(ctx, this.getIIcon()).color(iconColor).actionBarSize().paddingDp(1);
             selectedIcon = new IconicsDrawable(ctx, this.getIIcon()).color(selected_icon).actionBarSize().paddingDp(1);
         } else if (this.getIconRes() > -1) {
-            icon = ctx.getResources().getDrawable(getIconRes());
+            icon = UIUtils.getCompatDrawable(ctx, getIconRes());
 
             if (this.getSelectedIconRes() > -1) {
-                selectedIcon = ctx.getResources().getDrawable(getSelectedIconRes());
+                selectedIcon = UIUtils.getCompatDrawable(ctx, getSelectedIconRes());
             } else if (this.isSelectedIconTinted()) {
                 icon = new PressedEffectStateListDrawable(icon, selected_icon);
             }

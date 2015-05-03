@@ -2,7 +2,7 @@ package com.mikepenz.materialdrawer.app;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,11 +17,7 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
 
-import java.util.ArrayList;
-
-public class SimpleFragmentDrawerActivity extends ActionBarActivity {
-
-    ArrayList<Fragment> fragments = new ArrayList<Fragment>();
+public class SimpleFragmentDrawerActivity extends AppCompatActivity {
 
     //save our header or result
     private Drawer.Result result = null;
@@ -29,7 +25,7 @@ public class SimpleFragmentDrawerActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sample_fragment);
+        setContentView(R.layout.activity_sample_fragment_dark_toolbar);
 
         // Handle Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -76,7 +72,7 @@ public class SimpleFragmentDrawerActivity extends ActionBarActivity {
                 .build();
 
         //react on the keyboard
-        new KeyboardUtil(this, findViewById(R.id.fragment_container));
+        result.keyboardSupportEnabled(this, true);
     }
 
     @Override

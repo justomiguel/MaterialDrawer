@@ -1,20 +1,21 @@
 package com.mikepenz.materialdrawer.model;
 
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 
 import com.mikepenz.iconics.typeface.IIcon;
-import com.mikepenz.materialdrawer.model.interfaces.Badgeable;
 import com.mikepenz.materialdrawer.model.interfaces.Checkable;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.Iconable;
 import com.mikepenz.materialdrawer.model.interfaces.Identifyable;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.model.interfaces.Tagable;
+import com.mikepenz.materialdrawer.model.interfaces.Typefaceable;
 
 /**
  * Created by mikepenz on 03.02.15.
  */
-public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Iconable<T>, Badgeable<T>, Checkable<T>, Tagable<T>, Identifyable<T> {
+public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Iconable<T>, Checkable<T>, Tagable<T>, Identifyable<T>, Typefaceable<T> {
 
     private int identifier = -1;
     private Drawable icon;
@@ -24,14 +25,13 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
     private int selectedIconRes = -1;
     private String name;
     private int nameRes = -1;
-    private String badge;
     private boolean enabled = true;
     private boolean checkable = true;
     private Object tag;
 
     private int selectedColor = 0;
     private int selectedColorRes = -1;
-    private boolean selectedIconTinted = false;
+    private boolean selectedIconTinted = true;
 
     private int textColor = 0;
     private int textColorRes = -1;
@@ -47,6 +47,7 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
     private int disabledIconColor = 0;
     private int disabledIconColorRes = -1;
 
+    private Typeface typeface = null;
 
     public T withIdentifier(int identifier) {
         this.identifier = identifier;
@@ -80,16 +81,13 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
 
     public T withName(String name) {
         this.name = name;
+        this.nameRes = -1;
         return (T) this;
     }
 
     public T withName(int nameRes) {
         this.nameRes = nameRes;
-        return (T) this;
-    }
-
-    public T withBadge(String badge) {
-        this.badge = badge;
+        this.name = null;
         return (T) this;
     }
 
@@ -100,6 +98,11 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
 
     public T withCheckable(boolean checkable) {
         this.checkable = checkable;
+        return (T) this;
+    }
+
+    public T withEnabled(boolean enabled) {
+        this.enabled = enabled;
         return (T) this;
     }
 
@@ -180,6 +183,11 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
 
     public T withTintSelectedIcon(boolean tintSelectedIcon) {
         this.selectedIconTinted = tintSelectedIcon;
+        return (T) this;
+    }
+
+    public T withTypeface(Typeface typeface) {
+        this.typeface = typeface;
         return (T) this;
     }
 
@@ -314,6 +322,7 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
     @Override
     public void setName(String name) {
         this.name = name;
+        this.nameRes = -1;
     }
 
     public int getNameRes() {
@@ -323,15 +332,7 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
     @Override
     public void setNameRes(int nameRes) {
         this.nameRes = nameRes;
-    }
-
-    public String getBadge() {
-        return badge;
-    }
-
-    @Override
-    public void setBadge(String badge) {
-        this.badge = badge;
+        this.name = null;
     }
 
     @Override
@@ -404,5 +405,13 @@ public abstract class BaseDrawerItem<T> implements IDrawerItem, Nameable<T>, Ico
 
     public void setIconColor(int iconColor) {
         this.iconColor = iconColor;
+    }
+
+    public Typeface getTypeface() {
+        return typeface;
+    }
+
+    public void setTypeface(Typeface typeface) {
+        this.typeface = typeface;
     }
 }

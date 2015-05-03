@@ -1,5 +1,7 @@
 #MaterialDrawer  [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.mikepenz.materialdrawer/library/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/com.mikepenz.materialdrawer/library) [![Android Arsenal](https://img.shields.io/badge/Android%20Arsenal-MaterialDrawer-brightgreen.svg?style=flat)](https://android-arsenal.com/details/1/1526)
 
+[![Join the chat at https://gitter.im/mikepenz/MaterialDrawer](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mikepenz/MaterialDrawer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The **MaterialDrawer** library aims to provide the easiest possible implementation of a navigation drawer for your application. It provides a great amount of out of the box customizations and also includes an easy to use header which can be used as **AccountSwitcher**.
 
 
@@ -44,7 +46,7 @@ You can try it out here [Google Play](https://play.google.com/store/apps/details
 The MaterialDrawer Library is pushed to [Maven Central](http://search.maven.org/#search|ga|1|g%3A%22com.mikepenz.materialdrawer%22), so you just need to add the following dependency to your `build.gradle`.
 
 ```javascript
-compile('com.mikepenz.materialdrawer:library:2.5.4@aar') {
+compile('com.mikepenz.materialdrawer:library:2.9.2@aar') {
 	transitive = true
 }
 ```
@@ -53,8 +55,32 @@ compile('com.mikepenz.materialdrawer:library:2.5.4@aar') {
 Here's a quick overview what you have to do within your application.
 You can find a detailed description of all methods in the [WIKI](https://github.com/mikepenz/MaterialDrawer/wiki).
 
+###Upgrade Notes
+#### < v2.9.0
+v2.9.0 now uses the latest com.android.support:appcompat version 22.1.1. Please update if you use an older version. It is now also required to set the theme within your layout for toolbars. (Especially for the DarkToolbar theme)
+```java
+<android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:elevation="4dp"/>
+```
 
-###Upgrade Notes < v2.5.0
+#### < v2.8.0
+v2.8.0 now uses the latest com.android.support:appcompat version 22.1.0. Please update if you use an older version.
+
+#### < v2.7.7
+Beginning with v2.7.7, the `DrawerImageLoader.IDrawerImageLoader` interface now requires you to override the `placeholder` method (returning a custom placeholder Drawable). You may simply return a null Drawable to retain pre-v2.7.7 behavior, but it must be defined. See the sample app for an example.
+
+#### < v2.6.0
+Starting with v2.6.0 the `OnAccountHeaderListener.onProfileChanged` and `OnAccountHeaderSelectionViewClickListener.onClick` events will allow you to return an boolean.
+This boolean indicates if the event was consumed. Return false if you want the drawer to get closed. Also the `onProfileChanged` event will now contain a boolean
+variable which indicates if the clicked profile is the current profile.
+
+#### < v2.5.0
 If you used a version prior to v2.5.0 check following:
 You can remove the padding above the ToolBar. The library now uses a ScrimInsetsLayout. Just set your toolbar within the layout
 as you would normally do.
@@ -113,7 +139,8 @@ headerResult = new AccountHeader()
 	)
     .withOnAccountHeaderListener(new AccountHeader.OnAccountHeaderListener() {
 		@Override
-		public void onProfileChanged(View view, IProfile profile) { 
+		public boolean onProfileChanged(View view, IProfile profile, boolean currentProfile) {
+		    return false;
 		}
 	})
 	.build();
@@ -192,18 +219,18 @@ Use one of the provided themes. They all use the AppCompat theme as parent and d
 
 **NOTE:** The theme states ActionBar and not NoActionBar like the Appcompat style
 
-- MaterialDrawerTheme
-- MaterialDrawerTheme.TranslucentStatus
-- MaterialDrawerTheme.ActionBar
-- MaterialDrawerTheme.ActionBar.TranslucentStatus
-- MaterialDrawerTheme.Light
-- MaterialDrawerTheme.Light.TranslucentStatus
-- MaterialDrawerTheme.Light.ActionBar
-- MaterialDrawerTheme.Light.ActionBar.TranslucentStatus
-- MaterialDrawerTheme.Light.DarkToolbar
-- MaterialDrawerTheme.Light.DarkToolbar.TranslucentStatus
-- MaterialDrawerTheme.Light.DarkToolbar.ActionBar
-- MaterialDrawerTheme.Light.DarkToolbar.ActionBar.TranslucentStatus
+- **MaterialDrawerTheme** (extends Theme.AppCompat.NoActionBar)
+- **MaterialDrawerTheme.TranslucentStatus**
+- **MaterialDrawerTheme.ActionBar** (extends Theme.AppCompat)
+- **MaterialDrawerTheme.ActionBar.TranslucentStatus**
+- **MaterialDrawerTheme.Light** (extends Theme.AppCompat.Light.NoActionBar)
+- **MaterialDrawerTheme.Light.TranslucentStatus**
+- **MaterialDrawerTheme.Light.ActionBar** (extends Theme.AppCompat.Light)
+- **MaterialDrawerTheme.Light.ActionBar.TranslucentStatus**
+- **MaterialDrawerTheme.Light.DarkToolbar** (extends Theme.AppCompat.DarkActionBar) (disabled the ActionBar)
+- **MaterialDrawerTheme.Light.DarkToolbar.TranslucentStatus**
+- **MaterialDrawerTheme.Light.DarkToolbar.ActionBar** (extends Theme.AppCompat.DarkActionBar)
+- **MaterialDrawerTheme.Light.DarkToolbar.ActionBar.TranslucentStatus**
   
 
 ###Style the drawer
@@ -225,6 +252,7 @@ Create your custom style and use one of the provided themes as parent. If you do
         <item name="material_drawer_background">@color/material_drawer_background</item>
         <item name="material_drawer_icons">@color/material_drawer_icons</item>
         <item name="material_drawer_primary_text">@color/material_drawer_primary_text</item>
+        <item name="material_drawer_primary_icon">@color/material_drawer_primary_icon</item>
         <item name="material_drawer_secondary_text">@color/material_drawer_secondary_text</item>
         <item name="material_drawer_hint_text">@color/material_drawer_hint_text</item>
         <item name="material_drawer_divider">@color/material_drawer_divider</item>
@@ -249,10 +277,11 @@ No need to create a custom theme. Just set these colors (or some of them) and yo
     <color name="material_drawer_background">#F9F9F9</color>
     <!-- Material DEFAULT text / items colors -->
     <color name="material_drawer_icons">#FFF</color>
-    <color name="material_drawer_primary_text">#212121</color>
-    <color name="material_drawer_secondary_text">#727272</color>
-    <color name="material_drawer_hint_text">#B8B8B8</color>
-    <color name="material_drawer_divider">#B6B6B6</color>
+    <color name="material_drawer_primary_text">#DE000000</color>
+    <color name="material_drawer_primary_icon">#8A000000</color>
+    <color name="material_drawer_secondary_text">#8A000000</color>
+    <color name="material_drawer_hint_text">#42000000</color>
+    <color name="material_drawer_divider">#1F000000</color>
     <!-- Material DEFAULT drawer colors -->
     <color name="material_drawer_selected">#E8E8E8</color>
     <color name="material_drawer_selected_text">#2196F3</color>
@@ -264,10 +293,11 @@ No need to create a custom theme. Just set these colors (or some of them) and yo
     <color name="material_drawer_dark_background">#303030</color>
     <!-- MaterialDrawer DEFAULT DARK text / items colors -->
     <color name="material_drawer_dark_icons">#000</color>
-    <color name="material_drawer_dark_primary_text">#FFF</color>
-    <color name="material_drawer_dark_secondary_text">#DEDEDE</color>
-    <color name="material_drawer_dark_hint_text">#ABABAB</color>
-    <color name="material_drawer_dark_divider">#555555</color>
+    <color name="material_drawer_dark_primary_text">#DEFFFFFF</color>
+    <color name="material_drawer_dark_primary_icon">#8AFFFFFF</color>
+    <color name="material_drawer_dark_secondary_text">#8AFFFFFF</color>
+    <color name="material_drawer_dark_hint_text">#42FFFFFF</color>
+    <color name="material_drawer_dark_divider">#1FFFFFFF</color>
     <!-- MaterialDrawer DEFAULT DARK drawer colors -->
     <color name="material_drawer_dark_selected">#202020</color>
     <color name="material_drawer_dark_selected_text">@color/material_drawer_primary</color>
@@ -280,6 +310,35 @@ No need to create a custom theme. Just set these colors (or some of them) and yo
 //just use this with the Drawer.Builder
 .withSelectedItem(-1)
 ```
+
+#####How can i use this with espresso
+```java
+androidTestCompile ('com.android.support.test.espresso:espresso-contrib:2.0') {
+//this library uses the newest app compat v22 but the espresso contrib still v21. 
+//you have to specifically exclude the older verisions of the contrib library or
+// there will be some conflicts
+    exclude module: 'support-annotations'
+    exclude module: 'support-v4'
+    exclude module: 'recyclerview-v7'
+}
+```
+
+##Apps using the MaterialDrawer
+(feel free to send me new projects)
+
+* [wall:splash](https://play.google.com/store/apps/details?id=com.mikepenz.unsplash)
+
+* [GitSkarios](https://play.google.com/store/apps/details?id=com.alorma.github)
+
+* [Academic Schedule](https://play.google.com/store/apps/details?id=com.auebcsschedule.ppt)
+
+* [Strength](https://play.google.com/store/apps/details?id=com.e13engineering.strength)
+
+
+
+##Articles about the MaterialDrawer
+* [java-help.ru](http://java-help.ru/material-navigationdrawer/)
+
 
 
 #Credits

@@ -1,7 +1,10 @@
 package com.mikepenz.materialdrawer.model;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +16,13 @@ import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 import com.mikepenz.materialdrawer.model.interfaces.Identifyable;
 import com.mikepenz.materialdrawer.model.interfaces.Tagable;
+import com.mikepenz.materialdrawer.model.interfaces.Typefaceable;
 import com.mikepenz.materialdrawer.util.UIUtils;
 
 /**
  * Created by mikepenz on 03.02.15.
  */
-public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerItem>, Tagable<ProfileDrawerItem>, Identifyable<ProfileDrawerItem> {
+public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerItem>, Tagable<ProfileDrawerItem>, Identifyable<ProfileDrawerItem>, Typefaceable<ProfileDrawerItem> {
 
     private int identifier = -1;
 
@@ -26,6 +30,8 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
     private boolean nameShown = false;
 
     private Drawable icon;
+    private Bitmap iconBitmap;
+    private Uri iconUri;
 
     private String name;
     private String email;
@@ -39,6 +45,8 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
     private int textColor = 0;
     private int textColorRes = -1;
 
+    private Typeface typeface = null;
+
     public ProfileDrawerItem withIdentifier(int identifier) {
         this.identifier = identifier;
         return this;
@@ -46,6 +54,23 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
 
     public ProfileDrawerItem withIcon(Drawable icon) {
         this.icon = icon;
+        return this;
+    }
+
+    public ProfileDrawerItem withIcon(Bitmap iconBitmap) {
+        this.iconBitmap = iconBitmap;
+        return this;
+    }
+
+    @Override
+    public ProfileDrawerItem withIcon(String url) {
+        this.iconUri = Uri.parse(url);
+        return this;
+    }
+
+    @Override
+    public ProfileDrawerItem withIcon(Uri uri) {
+        this.iconUri = uri;
         return this;
     }
 
@@ -100,6 +125,11 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
         return this;
     }
 
+    public ProfileDrawerItem withTypeface(Typeface typeface) {
+        this.typeface = typeface;
+        return this;
+    }
+
     public boolean isNameShown() {
         return nameShown;
     }
@@ -141,6 +171,16 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
     }
 
     @Override
+    public Typeface getTypeface() {
+        return typeface;
+    }
+
+    @Override
+    public void setTypeface(Typeface typeface) {
+        this.typeface = typeface;
+    }
+
+    @Override
     public Object getTag() {
         return tag;
     }
@@ -150,8 +190,29 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
         this.tag = tag;
     }
 
+    @Override
+    public Uri getIconUri() {
+        return iconUri;
+    }
+
     public Drawable getIcon() {
         return icon;
+    }
+
+    public Bitmap getIconBitmap() {
+        return iconBitmap;
+    }
+
+    public void setIconBitmap(Bitmap iconBitmap) {
+        this.iconBitmap = iconBitmap;
+    }
+
+    public void setIcon(Uri uri) {
+        this.iconUri = uri;
+    }
+
+    public void setIcon(String url) {
+        this.iconUri = Uri.parse(url);
     }
 
     public void setIcon(Drawable icon) {
@@ -248,6 +309,11 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
             viewHolder.email.setText(this.getEmail());
         }
 
+        if (getTypeface() != null) {
+            viewHolder.name.setTypeface(getTypeface());
+            viewHolder.email.setTypeface(getTypeface());
+        }
+
         int color = textColor;
         if (color == 0 && textColorRes != -1) {
             color = ctx.getResources().getColor(textColorRes);
@@ -259,9 +325,14 @@ public class ProfileDrawerItem implements IDrawerItem, IProfile<ProfileDrawerIte
         }
         viewHolder.email.setTextColor(color);
 
-        if (this.getIcon() != null) {
+        viewHolder.profileIcon.setVisibility(View.VISIBLE);
+        if (this.getIconUri() != null) {
+            viewHolder.profileIcon.setImageDrawable(UIUtils.getPlaceHolder(ctx));
+            viewHolder.profileIcon.setImageURI(this.iconUri);
+        } else if (this.getIcon() != null) {
             viewHolder.profileIcon.setImageDrawable(this.getIcon());
-            viewHolder.profileIcon.setVisibility(View.VISIBLE);
+        } else if (this.getIconBitmap() != null) {
+            viewHolder.profileIcon.setImageBitmap(this.getIconBitmap());
         } else {
             viewHolder.profileIcon.setVisibility(View.INVISIBLE);
         }

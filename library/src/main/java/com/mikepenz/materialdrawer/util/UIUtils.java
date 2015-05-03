@@ -3,15 +3,19 @@ package com.mikepenz.materialdrawer.util;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 
+import com.mikepenz.google_material_typeface_library.GoogleMaterial;
+import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.materialdrawer.R;
 
 /**
@@ -44,6 +48,40 @@ public class UIUtils {
         StateListDrawable states = new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_activated}, clrActive);
         return states;
+    }
+
+
+    /**
+     * helper to get the system default selectable background inclusive an active state
+     *
+     * @param ctx
+     * @param selected_color
+     * @return
+     */
+    public static StateListDrawable getSelectableBackground(Context ctx, int selected_color) {
+        StateListDrawable states = getDrawerItemBackground(selected_color);
+        states.addState(new int[]{}, getCompatDrawable(ctx, getSelectableBackground(ctx)));
+        return states;
+    }
+
+    /**
+     * helper to get the system default selectable background
+     *
+     * @param ctx
+     * @return
+     */
+    public static int getSelectableBackground(Context ctx) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            // If we're running on Honeycomb or newer, then we can use the Theme's
+            // selectableItemBackground to ensure that the View has a pressed state
+            TypedValue outValue = new TypedValue();
+            ctx.getTheme().resolveAttribute(R.attr.selectableItemBackground, outValue, true);
+            return outValue.resourceId;
+        } else {
+            TypedValue outValue = new TypedValue();
+            ctx.getTheme().resolveAttribute(android.R.attr.itemBackground, outValue, true);
+            return outValue.resourceId;
+        }
     }
 
     public static int getThemeColor(Context ctx, int attr) {
@@ -83,6 +121,36 @@ public class UIUtils {
         } else {
             v.setBackground(d);
         }
+    }
+
+    /**
+     * helper method to set the background depending on the android version
+     *
+     * @param v
+     * @param drawableRes
+     */
+    public static void setBackground(View v, int drawableRes) {
+        setBackground(v, getCompatDrawable(v.getContext(), drawableRes));
+    }
+
+    /**
+     * helper method to get the drawable by its resource. specific to the correct android version
+     *
+     * @param c
+     * @param drawableRes
+     * @return
+     */
+    public static Drawable getCompatDrawable(Context c, int drawableRes) {
+        Drawable d = null;
+        try {
+            if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                d = c.getResources().getDrawable(drawableRes);
+            } else {
+                d = c.getResources().getDrawable(drawableRes, c.getTheme());
+            }
+        } catch (Exception ex) {
+        }
+        return d;
     }
 
     /**
@@ -129,6 +197,44 @@ public class UIUtils {
 
 
     /**
+     * helper to calculate the navigationBar height
+     *
+     * @param context
+     * @return
+     */
+    public static int getNavigationBarHeight(Context context) {
+        Resources resources = context.getResources();
+        int id = resources.getIdentifier(context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ? "navigation_bar_height" : "navigation_bar_height_landscape", "dimen", "android");
+        if (id > 0) {
+            return resources.getDimensionPixelSize(id);
+        }
+        return 0;
+    }
+
+    /**
+     * helper to calculate the statusBar height
+     *
+     * @param context
+     * @return
+     */
+    public static int getStatusBarHeight(Context context) {
+        int result = 0;
+        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = context.getResources().getDimensionPixelSize(resourceId);
+        }
+
+        int dimenResult = context.getResources().getDimensionPixelSize(R.dimen.tool_bar_top_padding);
+        //if our dimension is 0 return 0 because on those devices we don't need the height
+        if (dimenResult == 0) {
+            return 0;
+        } else {
+            //if our dimens is > 0 && the result == 0 use the dimenResult else the result;
+            return result == 0 ? dimenResult : result;
+        }
+    }
+
+    /**
      * This method converts dp unit to equivalent pixels, depending on device density.
      *
      * @param dp      A value in dp (density independent pixels) unit. Which we need to convert into pixels
@@ -155,4 +261,17 @@ public class UIUtils {
         float dp = px / (metrics.densityDpi / 160f);
         return dp;
     }
+
+
+    /**
+     * helper method to get a person placeHolder drawable
+     *
+     * @param ctx
+     * @return
+     */
+    public static Drawable getPlaceHolder(Context ctx) {
+        int textColor = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_text, R.color.material_drawer_primary_text);
+        return new IconicsDrawable(ctx, GoogleMaterial.Icon.gmd_person).color(textColor).backgroundColorRes(R.color.primary).iconOffsetYDp(2).paddingDp(2).sizeDp(56);
+    }
+
 }

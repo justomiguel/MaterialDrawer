@@ -5,28 +5,51 @@ import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.mikepenz.iconics.IconicsDrawable;
 import com.mikepenz.materialdrawer.R;
+import com.mikepenz.materialdrawer.model.interfaces.OnCheckedChangeListener;
 import com.mikepenz.materialdrawer.util.PressedEffectStateListDrawable;
 import com.mikepenz.materialdrawer.util.UIUtils;
 
 /**
  * Created by mikepenz on 03.02.15.
  */
-public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescriptionDrawerItem> {
+public class ToggleDrawerItem extends BaseDrawerItem<ToggleDrawerItem> {
     private String description;
     private int descriptionRes = -1;
 
-    public PrimaryDescriptionDrawerItem withDescription(String description) {
+    private boolean toggleEnabled = true;
+
+    private boolean checked = false;
+    private OnCheckedChangeListener onCheckedChangeListener = null;
+
+    public ToggleDrawerItem withDescription(String description) {
         this.description = description;
         return this;
     }
 
-    public PrimaryDescriptionDrawerItem withDescription(int descriptionRes) {
+    public ToggleDrawerItem withDescription(int descriptionRes) {
         this.descriptionRes = descriptionRes;
+        return this;
+    }
+
+    public ToggleDrawerItem withChecked(boolean checked) {
+        this.checked = checked;
+        return this;
+    }
+
+    public ToggleDrawerItem withToggleEnabled(boolean toggleEnabled) {
+        this.toggleEnabled = toggleEnabled;
+        return this;
+    }
+
+    public ToggleDrawerItem withOnCheckedChangeListener(OnCheckedChangeListener onCheckedChangeListener) {
+        this.onCheckedChangeListener = onCheckedChangeListener;
         return this;
     }
 
@@ -46,22 +69,45 @@ public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescript
         this.descriptionRes = descriptionRes;
     }
 
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
+    public boolean isToggleEnabled() {
+        return toggleEnabled;
+    }
+
+    public void setToggleEnabled(boolean toggleEnabled) {
+        this.toggleEnabled = toggleEnabled;
+    }
+
+    public OnCheckedChangeListener getOnCheckedChangeListener() {
+        return onCheckedChangeListener;
+    }
+
+    public void setOnCheckedChangeListener(OnCheckedChangeListener onCheckedChangeListener) {
+        this.onCheckedChangeListener = onCheckedChangeListener;
+    }
 
     @Override
     public String getType() {
-        return "PRIMARY_DESCRIPTION_ITEM";
+        return "TOGGLE_ITEM";
     }
 
     @Override
     public int getLayoutRes() {
-        return R.layout.material_drawer_item_primary_description;
+        return R.layout.material_drawer_item_toggle;
     }
 
     @Override
     public View convertView(LayoutInflater inflater, View convertView, ViewGroup parent) {
         Context ctx = parent.getContext();
 
-        ViewHolder viewHolder;
+        final ViewHolder viewHolder;
         if (convertView == null) {
             convertView = inflater.inflate(getLayoutRes(), parent, false);
             viewHolder = new ViewHolder(convertView);
@@ -84,18 +130,27 @@ public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescript
             viewHolder.name.setText(this.getName());
         }
 
+        viewHolder.description.setVisibility(View.VISIBLE);
         if (this.getDescriptionRes() != -1) {
             viewHolder.description.setText(this.getDescriptionRes());
-        } else {
+        } else if (this.getDescription() != null) {
             viewHolder.description.setText(this.getDescription());
+        } else {
+            viewHolder.description.setVisibility(View.GONE);
         }
 
-        if (getBadge() != null) {
-            viewHolder.badge.setText(getBadge());
-            viewHolder.badge.setVisibility(View.VISIBLE);
-        } else {
-            viewHolder.badge.setVisibility(View.GONE);
-        }
+
+        viewHolder.view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (toggleEnabled) {
+                    viewHolder.toggle.setChecked(!viewHolder.toggle.isChecked());
+                }
+            }
+        });
+        viewHolder.toggle.setChecked(checked);
+        viewHolder.toggle.setOnCheckedChangeListener(checkedChangeListener);
+        viewHolder.toggle.setEnabled(toggleEnabled);
 
         //get the correct color for the text
         int color;
@@ -134,7 +189,7 @@ public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescript
             if (iconColor == 0 && getIconColorRes() != -1) {
                 iconColor = ctx.getResources().getColor(getIconColorRes());
             } else if (iconColor == 0) {
-                iconColor = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_text, R.color.material_drawer_primary_text);
+                iconColor = UIUtils.getThemeColorFromAttrOrRes(ctx, R.attr.material_drawer_primary_icon, R.color.material_drawer_primary_icon);
             }
         } else {
             iconColor = getDisabledIconColor();
@@ -147,7 +202,11 @@ public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescript
 
         viewHolder.name.setTextColor(UIUtils.getTextColor(color, selected_text));
         viewHolder.description.setTextColor(UIUtils.getTextColor(color, selected_text));
-        viewHolder.badge.setTextColor(UIUtils.getTextColor(color, selected_text));
+
+        if (getTypeface() != null) {
+            viewHolder.name.setTypeface(getTypeface());
+            viewHolder.description.setTypeface(getTypeface());
+        }
 
         Drawable icon = null;
         Drawable selectedIcon = null;
@@ -163,10 +222,10 @@ public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescript
             icon = new IconicsDrawable(ctx, this.getIIcon()).color(iconColor).actionBarSize().paddingDp(1);
             selectedIcon = new IconicsDrawable(ctx, this.getIIcon()).color(selected_icon).actionBarSize().paddingDp(1);
         } else if (this.getIconRes() > -1) {
-            icon = ctx.getResources().getDrawable(getIconRes());
+            icon = UIUtils.getCompatDrawable(ctx, getIconRes());
 
             if (this.getSelectedIconRes() > -1) {
-                selectedIcon = ctx.getResources().getDrawable(getSelectedIconRes());
+                selectedIcon = UIUtils.getCompatDrawable(ctx, getSelectedIconRes());
             } else if (this.isSelectedIconTinted()) {
                 icon = new PressedEffectStateListDrawable(icon, selected_icon);
             }
@@ -192,14 +251,23 @@ public class PrimaryDescriptionDrawerItem extends BaseDrawerItem<PrimaryDescript
         private ImageView icon;
         private TextView name;
         private TextView description;
-        private TextView badge;
+        private ToggleButton toggle;
 
         private ViewHolder(View view) {
             this.view = view;
             this.icon = (ImageView) view.findViewById(R.id.icon);
             this.name = (TextView) view.findViewById(R.id.name);
             this.description = (TextView) view.findViewById(R.id.description);
-            this.badge = (TextView) view.findViewById(R.id.badge);
+            this.toggle = (ToggleButton) view.findViewById(R.id.toggle);
         }
     }
+
+    private CompoundButton.OnCheckedChangeListener checkedChangeListener = new CompoundButton.OnCheckedChangeListener() {
+        @Override
+        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+            if (getOnCheckedChangeListener() != null) {
+                getOnCheckedChangeListener().onCheckedChanged(ToggleDrawerItem.this, buttonView, isChecked);
+            }
+        }
+    };
 }

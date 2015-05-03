@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         applicationId "com.mikepenz.materialdrawer.app"
-        minSdkVersion 10
+        minSdkVersion 11
         targetSdkVersion 22
-        versionCode 254
-        versionName "2.5.4"
+        versionCode 292
+        versionName "2.9.2"
     }
     buildTypes {
         release {
@@ -23,7 +23,9 @@ android {
 
 dependencies {
     compile project(':library')
-    compile('com.mikepenz.aboutlibraries:library:4.5.8@aar') {
+    compile('com.mikepenz.aboutlibraries:library:4.7.1@aar') {
         transitive = true
     }
+    compile 'com.mikepenz.iconics:octicons-typeface:2.2.0@aar'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }

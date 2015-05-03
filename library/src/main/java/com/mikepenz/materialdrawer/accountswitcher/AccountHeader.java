@@ -2,12 +2,13 @@ package com.mikepenz.materialdrawer.accountswitcher;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -87,6 +88,52 @@ public class AccountHeader {
      */
     public AccountHeader withCompactStyle(boolean compactStyle) {
         this.mCompactStyle = compactStyle;
+        return this;
+    }
+
+    // the typeface used for textViews within the AccountHeader
+    protected Typeface mTypeface;
+
+    // the typeface used for name textView only. overrides mTypeface
+    protected Typeface mNameTypeface;
+
+    // the typeface used for email textView only. overrides mTypeface
+    protected Typeface mEmailTypeface;
+
+    /**
+     * Define the typeface which will be used for all textViews in the AccountHeader
+     *
+     * @param typeface
+     * @return
+     */
+    public AccountHeader withTypeface(Typeface typeface) {
+        this.mTypeface = typeface;
+        return this;
+    }
+
+    /**
+     * Define the typeface which will be used for name textView in the AccountHeader.
+     * Overrides typeface supplied to {@link com.mikepenz.materialdrawer.accountswitcher.AccountHeader#withTypeface(android.graphics.Typeface)}
+     *
+     * @param typeface
+     * @return
+     * @see #withTypeface(android.graphics.Typeface)
+     */
+    public AccountHeader withNameTypeface(Typeface typeface) {
+        this.mNameTypeface = typeface;
+        return this;
+    }
+
+    /**
+     * Define the typeface which will be used for email textView in the AccountHeader.
+     * Overrides typeface supplied to {@link com.mikepenz.materialdrawer.accountswitcher.AccountHeader#withTypeface(android.graphics.Typeface)}
+     *
+     * @param typeface
+     * @return
+     * @see #withTypeface(android.graphics.Typeface)
+     */
+    public AccountHeader withEmailTypeface(Typeface typeface) {
+        this.mEmailTypeface = typeface;
         return this;
     }
 
@@ -547,10 +594,10 @@ public class AccountHeader {
 
         // handle everything if we don't have a translucent status bar
         if (mTranslucentStatusBar) {
-            mAccountHeader.setPadding(0, mActivity.getResources().getDimensionPixelSize(R.dimen.tool_bar_top_padding), 0, 0);
+            mAccountHeader.setPadding(0, UIUtils.getStatusBarHeight(mActivity), 0, 0);
             //in fact it makes no difference if we have a translucent statusBar or not. we want 9/16 just if we are compact
             if (mCompactStyle) {
-                height = height + mActivity.getResources().getDimensionPixelSize(R.dimen.tool_bar_top_padding);
+                height = height + UIUtils.getStatusBarHeight(mActivity);
             }
         }
 
@@ -584,17 +631,8 @@ public class AccountHeader {
         } else {
             mAccountHeaderTextSection = mAccountHeaderContainer.findViewById(R.id.account_header_drawer_text_section);
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            // If we're running on Honeycomb or newer, then we can use the Theme's
-            // selectableItemBackground to ensure that the View has a pressed state
-            TypedValue outValue = new TypedValue();
-            mActivity.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
-            mAccountHeaderTextSectionBackgroundResource = outValue.resourceId;
-        } else {
-            TypedValue outValue = new TypedValue();
-            mActivity.getTheme().resolveAttribute(android.R.attr.itemBackground, outValue, true);
-            mAccountHeaderTextSectionBackgroundResource = outValue.resourceId;
-        }
+
+        mAccountHeaderTextSectionBackgroundResource = UIUtils.getSelectableBackground(mActivity);
         mAccountHeaderTextSection.setBackgroundResource(mAccountHeaderTextSectionBackgroundResource);
 
         // set the arrow :D
@@ -605,6 +643,19 @@ public class AccountHeader {
         mCurrentProfileView = (BezelImageView) mAccountHeader.findViewById(R.id.account_header_drawer_current);
         mCurrentProfileName = (TextView) mAccountHeader.findViewById(R.id.account_header_drawer_name);
         mCurrentProfileEmail = (TextView) mAccountHeader.findViewById(R.id.account_header_drawer_email);
+
+        //set the typeface for the AccountHeader
+        if (mNameTypeface != null) {
+            mCurrentProfileName.setTypeface(mNameTypeface);
+        } else if (mTypeface != null) {
+            mCurrentProfileName.setTypeface(mTypeface);
+        }
+
+        if (mEmailTypeface != null) {
+            mCurrentProfileEmail.setTypeface(mEmailTypeface);
+        } else if (mTypeface != null) {
+            mCurrentProfileEmail.setTypeface(mTypeface);
+        }
 
         mCurrentProfileName.setTextColor(mTextColor);
         mCurrentProfileEmail.setTextColor(mTextColor);
@@ -645,92 +696,93 @@ public class AccountHeader {
      * helper method to calculate the order of the profiles
      */
     protected void calculateProfiles() {
-        if (mProfiles != null) {
-            if (mCurrentProfile == null) {
+        if (mProfiles == null) {
+            mProfiles = new ArrayList<>();
+        }
 
-                int setCount = 0;
-                for (int i = 0; i < mProfiles.size(); i++) {
-                    if (mProfiles.size() > i && mProfiles.get(i).isSelectable()) {
-                        if (setCount == 0 && (mCurrentProfile == null)) {
-                            mCurrentProfile = mProfiles.get(i);
-                        } else if (setCount == 1 && (mProfileFirst == null)) {
-                            mProfileFirst = mProfiles.get(i);
-                        } else if (setCount == 2 && (mProfileSecond == null)) {
-                            mProfileSecond = mProfiles.get(i);
-                        } else if (setCount == 3 && (mProfileThird == null)) {
-                            mProfileThird = mProfiles.get(i);
-                        }
-                        setCount++;
-                    }
-                }
-
-                return;
-            }
-
-            IProfile[] previousActiveProfiles = new IProfile[]{
-                    mCurrentProfile,
-                    mProfileFirst,
-                    mProfileSecond,
-                    mProfileThird
-            };
-
-            IProfile[] newActiveProfiles = new IProfile[4];
-            Stack<IProfile> unusedProfiles = new Stack<>();
-
-            // try to keep existing active profiles in the same positions
+        if (mCurrentProfile == null) {
+            int setCount = 0;
             for (int i = 0; i < mProfiles.size(); i++) {
-                IProfile p = mProfiles.get(i);
-                if (p.isSelectable()) {
-                    boolean used = false;
-                    for (int j = 0; j < 4; j++) {
-                        if (previousActiveProfiles[j] == p) {
-                            newActiveProfiles[j] = p;
-                            used = true;
-                            break;
-                        }
+                if (mProfiles.size() > i && mProfiles.get(i).isSelectable()) {
+                    if (setCount == 0 && (mCurrentProfile == null)) {
+                        mCurrentProfile = mProfiles.get(i);
+                    } else if (setCount == 1 && (mProfileFirst == null)) {
+                        mProfileFirst = mProfiles.get(i);
+                    } else if (setCount == 2 && (mProfileSecond == null)) {
+                        mProfileSecond = mProfiles.get(i);
+                    } else if (setCount == 3 && (mProfileThird == null)) {
+                        mProfileThird = mProfiles.get(i);
                     }
-                    if (!used) {
-                        unusedProfiles.push(p);
-                    }
+                    setCount++;
                 }
             }
 
-            Stack<IProfile> activeProfiles = new Stack<>();
-            // try to fill the gaps with new available profiles
-            for (int i = 0; i < 4; i++) {
-                if (newActiveProfiles[i] != null) {
-                    activeProfiles.push(newActiveProfiles[i]);
-                } else if (!unusedProfiles.isEmpty()) {
-                    activeProfiles.push(unusedProfiles.pop());
+            return;
+        }
+
+        IProfile[] previousActiveProfiles = new IProfile[]{
+                mCurrentProfile,
+                mProfileFirst,
+                mProfileSecond,
+                mProfileThird
+        };
+
+        IProfile[] newActiveProfiles = new IProfile[4];
+        Stack<IProfile> unusedProfiles = new Stack<>();
+
+        // try to keep existing active profiles in the same positions
+        for (int i = 0; i < mProfiles.size(); i++) {
+            IProfile p = mProfiles.get(i);
+            if (p.isSelectable()) {
+                boolean used = false;
+                for (int j = 0; j < 4; j++) {
+                    if (previousActiveProfiles[j] == p) {
+                        newActiveProfiles[j] = p;
+                        used = true;
+                        break;
+                    }
+                }
+                if (!used) {
+                    unusedProfiles.push(p);
                 }
             }
+        }
 
-            Stack<IProfile> reversedActiveProfiles = new Stack<>();
-            while (!activeProfiles.empty()) {
-                reversedActiveProfiles.push(activeProfiles.pop());
+        Stack<IProfile> activeProfiles = new Stack<>();
+        // try to fill the gaps with new available profiles
+        for (int i = 0; i < 4; i++) {
+            if (newActiveProfiles[i] != null) {
+                activeProfiles.push(newActiveProfiles[i]);
+            } else if (!unusedProfiles.isEmpty()) {
+                activeProfiles.push(unusedProfiles.pop());
             }
+        }
 
-            // reassign active profiles
-            if (reversedActiveProfiles.isEmpty()) {
-                mCurrentProfile = null;
-            } else {
-                mCurrentProfile = reversedActiveProfiles.pop();
-            }
-            if (reversedActiveProfiles.isEmpty()) {
-                mProfileFirst = null;
-            } else {
-                mProfileFirst = reversedActiveProfiles.pop();
-            }
-            if (reversedActiveProfiles.isEmpty()) {
-                mProfileSecond = null;
-            } else {
-                mProfileSecond = reversedActiveProfiles.pop();
-            }
-            if (reversedActiveProfiles.isEmpty()) {
-                mProfileThird = null;
-            } else {
-                mProfileThird = reversedActiveProfiles.pop();
-            }
+        Stack<IProfile> reversedActiveProfiles = new Stack<>();
+        while (!activeProfiles.empty()) {
+            reversedActiveProfiles.push(activeProfiles.pop());
+        }
+
+        // reassign active profiles
+        if (reversedActiveProfiles.isEmpty()) {
+            mCurrentProfile = null;
+        } else {
+            mCurrentProfile = reversedActiveProfiles.pop();
+        }
+        if (reversedActiveProfiles.isEmpty()) {
+            mProfileFirst = null;
+        } else {
+            mProfileFirst = reversedActiveProfiles.pop();
+        }
+        if (reversedActiveProfiles.isEmpty()) {
+            mProfileSecond = null;
+        } else {
+            mProfileSecond = reversedActiveProfiles.pop();
+        }
+        if (reversedActiveProfiles.isEmpty()) {
+            mProfileThird = null;
+        } else {
+            mProfileThird = reversedActiveProfiles.pop();
         }
     }
 
@@ -738,13 +790,14 @@ public class AccountHeader {
      * helper method to switch the profiles
      *
      * @param newSelection
+     * @return true if the new selection was the current profile
      */
-    protected void switchProfiles(IProfile newSelection) {
+    protected boolean switchProfiles(IProfile newSelection) {
         if (newSelection == null) {
-            return;
+            return false;
         }
         if (mCurrentProfile == newSelection) {
-            return;
+            return true;
         }
 
         if (mAlternativeProfileHeaderSwitching) {
@@ -800,6 +853,8 @@ public class AccountHeader {
         }
 
         buildProfiles();
+
+        return false;
     }
 
     /**
@@ -820,7 +875,7 @@ public class AccountHeader {
 
         if (mCurrentProfile != null) {
             if (mProfileImagesVisible) {
-                setImageOrPlaceholder(mCurrentProfileView, mCurrentProfile.getIcon());
+                setImageOrPlaceholder(mCurrentProfileView, mCurrentProfile.getIcon(), mCurrentProfile.getIconUri());
                 mCurrentProfileView.setTag(mCurrentProfile);
                 if (mProfileImagesClickable) {
                     mCurrentProfileView.setOnClickListener(onProfileClickListener);
@@ -841,7 +896,7 @@ public class AccountHeader {
             mCurrentProfileEmail.setText(mCurrentProfile.getEmail());
 
             if (mProfileFirst != null && mProfileImagesVisible) {
-                setImageOrPlaceholder(mProfileFirstView, mProfileFirst.getIcon());
+                setImageOrPlaceholder(mProfileFirstView, mProfileFirst.getIcon(), mProfileFirst.getIconUri());
                 mProfileFirstView.setTag(mProfileFirst);
                 if (mProfileImagesClickable) {
                     mProfileFirstView.setOnClickListener(onProfileClickListener);
@@ -852,7 +907,7 @@ public class AccountHeader {
                 mProfileFirstView.setVisibility(View.VISIBLE);
             }
             if (mProfileSecond != null && mProfileImagesVisible) {
-                setImageOrPlaceholder(mProfileSecondView, mProfileSecond.getIcon());
+                setImageOrPlaceholder(mProfileSecondView, mProfileSecond.getIcon(), mProfileSecond.getIconUri());
                 mProfileSecondView.setTag(mProfileSecond);
                 if (mProfileImagesClickable) {
                     mProfileSecondView.setOnClickListener(onProfileClickListener);
@@ -866,7 +921,7 @@ public class AccountHeader {
                 alignParentLayoutParam(mProfileFirstView, 1);
             }
             if (mProfileThird != null && mThreeSmallProfileImages && mProfileImagesVisible) {
-                setImageOrPlaceholder(mProfileThirdView, mProfileThird.getIcon());
+                setImageOrPlaceholder(mProfileThirdView, mProfileThird.getIcon(), mProfileThird.getIconUri());
                 mProfileThirdView.setTag(mProfileThird);
                 if (mProfileImagesClickable) {
                     mProfileThirdView.setOnClickListener(onProfileClickListener);
@@ -909,9 +964,14 @@ public class AccountHeader {
             mAccountSwitcherArrow.setVisibility(View.INVISIBLE);
             UIUtils.setBackground(mAccountHeaderTextSection, null);
         }
-        if (!mSelectionListEnabledForSingleProfile && mProfileFirst == null) {
+        if (!mSelectionListEnabledForSingleProfile && mProfileFirst == null && (mProfiles == null || mProfiles.size() == 1)) {
             mAccountSwitcherArrow.setVisibility(View.INVISIBLE);
             UIUtils.setBackground(mAccountHeaderTextSection, null);
+        }
+
+        //if we disabled the list but still have set a custom listener
+        if (mOnAccountHeaderSelectionViewClickListener != null) {
+            mAccountHeaderTextSection.setBackgroundResource(mAccountHeaderTextSectionBackgroundResource);
         }
     }
 
@@ -936,9 +996,12 @@ public class AccountHeader {
      * @param iv
      * @param d
      */
-    private void setImageOrPlaceholder(ImageView iv, Drawable d) {
-        if (d == null) {
-            iv.setImageDrawable(new IconicsDrawable(iv.getContext(), GoogleMaterial.Icon.gmd_person).color(mTextColor).backgroundColorRes(R.color.primary).iconOffsetYDp(2).paddingDp(2).sizeDp(56));
+    private void setImageOrPlaceholder(ImageView iv, Drawable d, Uri uri) {
+        if (uri != null) {
+            iv.setImageDrawable(UIUtils.getPlaceHolder(iv.getContext()));
+            iv.setImageURI(uri);
+        } else if (d == null) {
+            iv.setImageDrawable(UIUtils.getPlaceHolder(iv.getContext()));
         } else {
             iv.setImageDrawable(d);
         }
@@ -947,26 +1010,43 @@ public class AccountHeader {
     /**
      * onProfileClickListener to notify onClick on a profile image
      */
+    private View.OnClickListener onCurrentProfileClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View v) {
+            onProfileClick(v, true);
+        }
+    };
+
+    /**
+     * onProfileClickListener to notify onClick on a profile image
+     */
     private View.OnClickListener onProfileClickListener = new View.OnClickListener() {
         @Override
         public void onClick(final View v) {
-            final IProfile profile = (IProfile) v.getTag();
-            switchProfiles(profile);
+            onProfileClick(v, false);
+        }
+    };
 
+    private void onProfileClick(View v, boolean current) {
+        final IProfile profile = (IProfile) v.getTag();
+        switchProfiles(profile);
+
+        boolean consumed = false;
+        if (mOnAccountHeaderListener != null) {
+            consumed = mOnAccountHeaderListener.onProfileChanged(v, profile, current);
+        }
+
+        if (!consumed) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (mOnAccountHeaderListener != null) {
-                        mOnAccountHeaderListener.onProfileChanged(v, profile);
-                    }
-
                     if (mDrawer != null) {
                         mDrawer.closeDrawer();
                     }
                 }
             }, 200);
         }
-    };
+    }
 
     /**
      * get the current selection
@@ -992,11 +1072,12 @@ public class AccountHeader {
     private View.OnClickListener onSelectionClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            boolean consumed = false;
             if (mOnAccountHeaderSelectionViewClickListener != null) {
-                mOnAccountHeaderSelectionViewClickListener.onClick(v, (IProfile) v.getTag());
+                consumed = mOnAccountHeaderSelectionViewClickListener.onClick(v, (IProfile) v.getTag());
             }
 
-            if (mAccountSwitcherArrow.getVisibility() == View.VISIBLE) {
+            if (mAccountSwitcherArrow.getVisibility() == View.VISIBLE && !consumed) {
                 toggleSelectionList(v.getContext());
             }
         }
@@ -1013,6 +1094,10 @@ public class AccountHeader {
             if (mDrawer.switchedDrawerContent()) {
                 resetDrawerContent(ctx);
                 mSelectionListShown = false;
+
+                if (mDrawer.getStickyFooter() != null) {
+                    mDrawer.getStickyFooter().setVisibility(View.VISIBLE);
+                }
             } else {
                 //build and set the drawer selection list
                 buildDrawerSelectionList();
@@ -1020,6 +1105,10 @@ public class AccountHeader {
                 // update the arrow image within the drawer
                 mAccountSwitcherArrow.setImageDrawable(new IconicsDrawable(ctx, GoogleMaterial.Icon.gmd_arrow_drop_up).sizeDp(24).paddingDp(6).color(mTextColor));
                 mSelectionListShown = true;
+
+                if (mDrawer.getStickyFooter() != null) {
+                    mDrawer.getStickyFooter().setVisibility(View.GONE);
+                }
             }
         }
     }
@@ -1031,20 +1120,21 @@ public class AccountHeader {
         int selectedPosition = -1;
         int position = 0;
         ArrayList<IDrawerItem> profileDrawerItems = new ArrayList<>();
-        for (IProfile profile : mProfiles) {
-            if (profile == mCurrentProfile) {
-                if (mCurrentHiddenInList) {
-                    return;
-                } else {
-                    selectedPosition = position;
+        if (mProfiles != null) {
+            for (IProfile profile : mProfiles) {
+                if (profile == mCurrentProfile) {
+                    if (mCurrentHiddenInList) {
+                        continue;
+                    } else {
+                        selectedPosition = position;
+                    }
                 }
+                if (profile instanceof IDrawerItem) {
+                    profileDrawerItems.add((IDrawerItem) profile);
+                }
+                position = position + 1;
             }
-            if (profile instanceof IDrawerItem) {
-                profileDrawerItems.add((IDrawerItem) profile);
-            }
-            position = position + 1;
         }
-
         mDrawer.switchDrawerContent(onDrawerItemClickListener, profileDrawerItems, selectedPosition);
     }
 
@@ -1054,8 +1144,11 @@ public class AccountHeader {
     private Drawer.OnDrawerItemClickListener onDrawerItemClickListener = new Drawer.OnDrawerItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, final View view, int position, long id, final IDrawerItem drawerItem) {
+            final boolean isCurrentSelectedProfile;
             if (drawerItem != null && drawerItem instanceof IProfile && ((IProfile) drawerItem).isSelectable()) {
-                switchProfiles((IProfile) drawerItem);
+                isCurrentSelectedProfile = switchProfiles((IProfile) drawerItem);
+            } else {
+                isCurrentSelectedProfile = false;
             }
             mDrawer.setOnDrawerItemClickListener(null);
             //wrap the onSelection call and the reset stuff within a handler to prevent lag
@@ -1064,10 +1157,10 @@ public class AccountHeader {
                 public void run() {
                     if (drawerItem != null && drawerItem instanceof IProfile) {
                         if (mOnAccountHeaderListener != null) {
-                            mOnAccountHeaderListener.onProfileChanged(view, (IProfile) drawerItem);
+                            mOnAccountHeaderListener.onProfileChanged(view, (IProfile) drawerItem, isCurrentSelectedProfile);
                         }
                     }
-                    if (mDrawer != null) {
+                    if (mDrawer != null && view.getContext() != null) {
                         resetDrawerContent(view.getContext());
                     }
 
@@ -1291,6 +1384,19 @@ public class AccountHeader {
         }
 
         /**
+         * Clear the header
+         */
+        public void clear() {
+            mAccountHeader.mProfiles = null;
+
+            //calculate the profiles to set
+            mAccountHeader.calculateProfiles();
+
+            //process and build the profiles
+            mAccountHeader.buildProfiles();
+        }
+
+        /**
          * add the values to the bundle for saveInstanceState
          *
          * @param savedInstanceState
@@ -1306,10 +1412,24 @@ public class AccountHeader {
 
 
     public interface OnAccountHeaderListener {
-        public void onProfileChanged(View view, IProfile profile);
+        /**
+         * the event when the profile changes
+         *
+         * @param view
+         * @param profile
+         * @return if the event was consumed
+         */
+        public boolean onProfileChanged(View view, IProfile profile, boolean current);
     }
 
     public interface OnAccountHeaderSelectionViewClickListener {
-        public void onClick(View view, IProfile profile);
+        /**
+         * the event when the user clicks the selection list under the profile icons
+         *
+         * @param view
+         * @param profile
+         * @return if the event was consumed
+         */
+        public boolean onClick(View view, IProfile profile);
     }
 }

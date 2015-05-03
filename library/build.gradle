@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion '22'
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion 10
         targetSdkVersion 22
-        versionCode 254
-        versionName '2.5.4'
+        versionCode 292
+        versionName '2.9.2'
     }
 
     buildTypes {
@@ -28,10 +28,9 @@ android {
 apply from: 'gradle-mvn-push.gradle'
 
 dependencies {
-    compile 'com.android.support:support-v4:22.0.0'
-    compile "com.android.support:appcompat-v7:22.0.0"
+    compile "com.android.support:appcompat-v7:22.1.1"
 
-    compile('com.mikepenz.iconics:library:0.7.9@aar') {
+    compile('com.mikepenz.iconics:library:0.9.1@aar') {
         transitive = true
     }
 }

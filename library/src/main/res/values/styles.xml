@@ -33,6 +33,7 @@
         <item name="material_drawer_background">@color/material_drawer_dark_background</item>
         <item name="material_drawer_icons">@color/material_drawer_dark_icons</item>
         <item name="material_drawer_primary_text">@color/material_drawer_dark_primary_text</item>
+        <item name="material_drawer_primary_icon">@color/material_drawer_dark_primary_icon</item>
         <item name="material_drawer_secondary_text">@color/material_drawer_dark_secondary_text</item>
         <item name="material_drawer_hint_text">@color/material_drawer_dark_hint_text</item>
         <item name="material_drawer_divider">@color/material_drawer_dark_divider</item>
@@ -52,16 +53,11 @@
 
     <style name="MaterialDrawerTheme.ActionBar" parent="MaterialDrawerTheme">
         <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
     </style>
 
     <style name="MaterialDrawerTheme.ActionBar.TranslucentStatus" parent="MaterialDrawerTheme.ActionBar">
     </style>
-
-    <style name="MaterialDrawer.DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
-        <item name="spinBars">false</item>
-        <item name="color">@android:color/white</item>
-    </style>
-
 
     <!-- LIGHT -->
     <style name="MaterialDrawerBaseBaseTheme.Light" parent="Theme.AppCompat.Light.NoActionBar">
@@ -78,6 +74,7 @@
         <item name="material_drawer_background">@color/material_drawer_background</item>
         <item name="material_drawer_icons">@color/material_drawer_icons</item>
         <item name="material_drawer_primary_text">@color/material_drawer_primary_text</item>
+        <item name="material_drawer_primary_icon">@color/material_drawer_primary_icon</item>
         <item name="material_drawer_secondary_text">@color/material_drawer_secondary_text</item>
         <item name="material_drawer_hint_text">@color/material_drawer_hint_text</item>
         <item name="material_drawer_divider">@color/material_drawer_divider</item>
@@ -97,24 +94,21 @@
 
     <style name="MaterialDrawerTheme.Light.ActionBar" parent="MaterialDrawerTheme.Light">
         <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
     </style>
 
     <style name="MaterialDrawerTheme.Light.ActionBar.TranslucentStatus" parent="MaterialDrawerTheme.Light.ActionBar">
-    </style>
-
-    <style name="MaterialDrawer.Light.DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
-        <item name="spinBars">false</item>
-        <item name="color">@android:color/black</item>
     </style>
 
 
     <!-- LIGHT DARK ACTIONBAR -->
     <style name="MaterialDrawerBaseBaseTheme.Light.DarkToolbar" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
 
         <!-- Here we setting appcompat’s actionBarStyle -->
         <item name="drawerArrowStyle">@style/MaterialDrawer.DrawerArrowStyle</item>
-        <item name="theme">@style/ThemeOverlay.AppCompat.Dark</item>
+        
 
         <!-- ...and here we setting appcompat’s color theming attrs -->
         <item name="colorPrimary">@color/material_drawer_primary</item>
@@ -126,6 +120,7 @@
         <item name="material_drawer_background">@color/material_drawer_background</item>
         <item name="material_drawer_icons">@color/material_drawer_icons</item>
         <item name="material_drawer_primary_text">@color/material_drawer_primary_text</item>
+        <item name="material_drawer_primary_icon">@color/material_drawer_primary_icon</item>
         <item name="material_drawer_secondary_text">@color/material_drawer_secondary_text</item>
         <item name="material_drawer_hint_text">@color/material_drawer_hint_text</item>
         <item name="material_drawer_divider">@color/material_drawer_divider</item>
@@ -145,8 +140,24 @@
 
     <style name="MaterialDrawerTheme.Light.DarkToolbar.ActionBar" parent="MaterialDrawerTheme.Light.DarkToolbar">
         <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+
+        <!-- only set this if we use an ActionBar -->
+        <item name="android:theme">@style/ThemeOverlay.AppCompat.Dark</item>
     </style>
 
     <style name="MaterialDrawerTheme.Light.DarkToolbar.ActionBar.TranslucentStatus" parent="MaterialDrawerTheme.Light.DarkToolbar">
+    </style>
+
+
+    <!-- DrawerArrowStyles -->
+    <style name="MaterialDrawer.DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">false</item>
+        <item name="color">@android:color/white</item>
+    </style>
+
+    <style name="MaterialDrawer.Light.DrawerArrowStyle" parent="Widget.AppCompat.DrawerArrowToggle">
+        <item name="spinBars">false</item>
+        <item name="color">@android:color/black</item>
     </style>
 </resources>

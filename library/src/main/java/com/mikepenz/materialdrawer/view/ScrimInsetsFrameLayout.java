@@ -40,6 +40,8 @@ public class ScrimInsetsFrameLayout extends FrameLayout {
     private Rect mTempRect = new Rect();
     private OnInsetsCallback mOnInsetsCallback;
 
+    private boolean mEnabled = true;
+
     public ScrimInsetsFrameLayout(Context context) {
         super(context);
         init(context, null, 0);
@@ -127,6 +129,18 @@ public class ScrimInsetsFrameLayout extends FrameLayout {
             mInsetForeground.setCallback(null);
         }
     }
+
+
+    public boolean isEnabled() {
+        return mEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.mEnabled = enabled;
+        //setWillNotDraw(false);
+        invalidate();
+    }
+
 
     public Drawable getInsetForeground() {
         return mInsetForeground;
